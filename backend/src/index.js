@@ -13,7 +13,6 @@ mongoose.connect('mongodb://goweek:goweek123@ds155313.mlab.com:55313/goweekjmede
 
 app.use((req, res, next) => {
     req.io = io;
-
     return next();
 });
 
