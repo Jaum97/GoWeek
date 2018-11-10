@@ -1,17 +1,52 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import api from '../services/api';
+import Tweet from '../components/Tweet';
+import socket from 'socket-io-client';
 export default class Timeline extends Component {
-  static navigationOptions = {
+  static navigationOptions = ({ navigation }) => ({
     title: 'Home',
-    headerRight:<Icon name="add-circle-outline"
-      size={24}
-      color="#4bb0ee"/>
+    headerRight: (
+      <TouchableOpacity onPress={() => navigation.navigate('New')}>
+        <Icon name="add-circle-outline"
+          size={24}
+          color="#4bb0ee"
+        />
+      </TouchableOpacity>
+    )
+  });
+  state = {
+    tweets: [],
   };
+
+  async componentDidMount() {
+    this.subscribeToEvents();
+    const response = await api.get('tweets');
+    this.setState({ tweets: response.data })
+  };
+
+  subscribeToEvents = () => {
+    const io = socket('http://10.0.3.2:3000');
+    io.on('tweet', data => {
+      this.setState({ tweets: [data, ...this.state.tweets] });
+    });
+    io.on('like', data => {
+      this.setState({
+        tweets: this.state.tweets.map(tweet =>
+          tweet._id === data._id ? data : tweet)
+      })
+    });
+  };
+
   render() {
     return <View style={styles.container}>
-    <Text>Timeline</Text>
-    
+      <FlatList
+        data={this.state.tweets}
+        keyExtractor={tweet => tweet._id}
+        renderItem={({ item }) => <Tweet tweet={item} />}
+      />
+
     </View>
   }
 }

@@ -1,10 +1,51 @@
 import React, { Component } from 'react';
-import { View, Text , StyleSheet} from 'react-native';
-
+import { AsyncStorage, View, Text, StyleSheet, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import api from '../services/api';
 export default class New extends Component {
-  render() {
-    return <Text>New</Text>
+  static navigationOptions = {
+    header: null,
+  };
+
+  state = {
+    newTweet: '',
   }
+
+  goBack = () => {
+    this.props.navigation.pop();
+  };
+  handleNewTweet = async () => {
+    const content = this.state.newTweet;
+    const author = await AsyncStorage.getItem('@GoTweitter:username');
+
+    await api.post('tweets', { content, author });
+    this.goBack();
+
+  };
+  handleInputChange = newTweet => {
+    this.setState({ newTweet });
+  };
+  render() {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={this.goBack}>
+            <Icon name="close" size={24} color="#4BB0EE" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={this.handleNewTweet}>
+            <Text style={styles.buttonText}>Tweetar</Text>
+          </TouchableOpacity>
+        </View>
+        <TextInput style={styles.input}
+          multiline
+          placeholder="Whats new"
+          value={this.state.newTweet}
+          onChangeText={this.handleInputChange}
+          placeholderTextColor="#999"
+          returnKeyType="send"
+          onSubmitEditing={this.handleNewTweet} />
+      </SafeAreaView>)
+  };
 }
 
 const styles = StyleSheet.create({
